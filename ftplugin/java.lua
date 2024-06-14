@@ -1,6 +1,29 @@
-local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ':p:h:t')
+-- old
+-- local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ':p:h:t')
+--
+-- local workspace_dir = '~/code/liberty/' .. project_name
+--
+package.path = package.path .. ';/Users/n0342839/.local/share/nvim/mason/packages/jdtls/'
+package.cpath = package.cpath .. ';/Users/n0342839/.local/share/nvim/mason/packages/jdtls/'
 
-local workspace_dir = '~/code/liberty/' .. project_name
+local mason = require 'mason-registry'
+local jdtls_path = mason.get_package('jdtls'):get_install_path()
+local java_debug_path = mason.get_package('java-debug-adapter'):get_install_path()
+local java_test_path = mason.get_package('java-test'):get_install_path()
+
+local equinox_launcher_path = vim.fn.glob(jdtls_path .. '/plugins/org.eclipse.equinox.launcher_*.jar')
+
+local system = 'linux'
+if vim.fn.has 'win32' then
+  system = 'win'
+elseif vim.fn.has 'mac' then
+  system = 'mac'
+end
+local config_path = vim.fn.glob(jdtls_path .. '/config_' .. system)
+
+local lombok_path = jdtls_path .. '/lombok.jar'
+
+local jdtls = require 'jdtls'
 
 -- See `:help vim.lsp.start_client` for an overview of the supported `config` options.
 local config = {
@@ -26,22 +49,21 @@ local config = {
 
     -- 💀
     '-jar',
-    '~/plugins/org.eclipse.equinox.launcher.cocoa.macosx.x86_64_1.2.1000.v20240507-1834.jar',
-    -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                       ^^^^^^^^^^^^^^
-    -- Must point to the                                                     Change this to
-    -- eclipse.jdt.ls installation                                           the actual version
+    equinox_launcher_path -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                       ^^^^^^^^^^^^^^      -- Must point to the                                                     Change this to
+      -- eclipse.jdt.ls installation
+
+      -- lombok
+ '-javaagent:' .. lombok_path,
 
     -- 💀
     '-configuration',
-    '~/plugins/config_mac',
-    -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        ^^^^^^
-    -- Must point to the                      Change to one of `linux`, `win` or `mac`
-    -- eclipse.jdt.ls installation            Depending on your system.
+    config_path -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        ^^^^^^      -- Must point to the                      Change to one of `linux`, `win` or `mac`
+      -- eclipse.jdt.ls installation            Depending on your system.
 
-    -- 💀
-    -- See `data directory configuration` section in the README
-    '-data',
-    workspace_dir,
+      -- 💀
+      -- See `data directory configuration` section in the README
+ '-data',
+    vim.fn.stdpath 'cache' .. '/jdtls/' .. vim.fn.fnamemodify(vim.fn.getcwd(), ':t'),
   },
 
   -- 💀
@@ -70,6 +92,17 @@ local config = {
     bundles = {},
   },
 }
+
+local bundles = {
+  vim.fn.glob(java_debug_path .. '/extension/server/com.microsoft.java.debug.plugin-*.jar'),
+}
+
+vim.list_extend(bundles, vim.split(vim.fn.glob(java_test_path .. '/extension/server/*.jar'), '\n'))
+
+config['init_options'] = {
+  bundles = bundles,
+}
+
 -- This starts a new client & server,
 -- or attaches to an existing client & server depending on the `root_dir`.
-require('jdtls').start_or_attach(config)
+jdtls.start_or_attach(config)
