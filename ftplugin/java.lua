@@ -1,8 +1,3 @@
--- old
--- local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ':p:h:t')
---
--- local workspace_dir = '~/code/liberty/' .. project_name
---
 package.path = package.path .. ';/Users/n0342839/.local/share/nvim/mason/packages/jdtls/'
 package.cpath = package.cpath .. ';/Users/n0342839/.local/share/nvim/mason/packages/jdtls/'
 
@@ -49,16 +44,14 @@ local config = {
 
     -- 💀
     '-jar',
-    equinox_launcher_path -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                       ^^^^^^^^^^^^^^      -- Must point to the                                                     Change this to
-      -- eclipse.jdt.ls installation
+    equinox_launcher_path -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                       ^^^^^^^^^^^^^^      -- Must point to the                                                     Change this to      -- eclipse.jdt.ls installation
 
       -- lombok
  '-javaagent:' .. lombok_path,
 
     -- 💀
     '-configuration',
-    config_path -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        ^^^^^^      -- Must point to the                      Change to one of `linux`, `win` or `mac`
-      -- eclipse.jdt.ls installation            Depending on your system.
+    config_path -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        ^^^^^^      -- Must point to the                      Change to one of `linux`, `win` or `mac`      -- eclipse.jdt.ls installation            Depending on your system.
 
       -- 💀
       -- See `data directory configuration` section in the README
