@@ -27,6 +27,8 @@ return {
               -- local java_test_path = mason.get_package('java-test'):get_install_path()
 
               local equinox_launcher_path = vim.fn.glob(jdtls_path .. '/plugins/org.eclipse.equinox.launcher_*.jar')
+              print('jdtls_path: ', jdtls_path)
+              print('equinox_launcher_path: ', equinox_launcher_path)
               local system = 'linux'
               if vim.fn.has 'win32' then
                 system = 'win'
@@ -43,7 +45,7 @@ return {
                 -- See: https://github.com/eclipse/eclipse.jdt.ls#running-from-the-command-line
                 cmd = {
                   '/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home',
-                  -- depends on if `java` is in your $PATH env variable and if it points to the right version.
+
                   '-Declipse.application=org.eclipse.jdt.ls.core.id1',
                   '-Dosgi.bundles.defaultStartLevel=4',
                   '-Declipse.product=org.eclipse.jdt.ls.core.product',
@@ -55,12 +57,15 @@ return {
                   'java.base/java.util=ALL-UNNAMED',
                   '--add-opens',
                   'java.base/java.lang=ALL-UNNAMED',
+
+                  -- Must point to the eclipse.jdt.ls installation
                   '-jar',
-                  equinox_launcher_path -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                       ^^^^^^^^^^^^^^      -- Must point to the                                                     Change this to      -- eclipse.jdt.ls installation                    -- lombok '-javaagent:'
-                    .. lombok_path,
-                  -- 💀
+                  equinox_launcher_path -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    -- lombok
+ '-javaagent:' .. lombok_path,
+
                   '-configuration',
-                  config_path -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        ^^^^^^      -- Must point to the                      Change to one of `linux`, `win` or `mac`      -- eclipse.jdt.ls installation            Depending on your system.                    -- See `data directory configuration` section in the README '-data',
+                  config_path '-data',
                   vim.fn.stdpath 'cache' .. '/jdtls/' .. vim.fn.fnamemodify(vim.fn.getcwd(), ':t'),
                 },
                 -- This is the default if not provided, you can remove it. Or adjust as needed.
