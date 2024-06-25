@@ -44,7 +44,7 @@ return {
                 -- The command that starts the language server
                 -- See: https://github.com/eclipse/eclipse.jdt.ls#running-from-the-command-line
                 cmd = {
-                  '/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home',
+                  '/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home/bin/java',
 
                   '-Declipse.application=org.eclipse.jdt.ls.core.id1',
                   '-Dosgi.bundles.defaultStartLevel=4',
@@ -60,12 +60,14 @@ return {
 
                   -- Must point to the eclipse.jdt.ls installation
                   '-jar',
-                  equinox_launcher_path -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-                    -- lombok
- '-javaagent:' .. lombok_path,
+                  equinox_launcher_path,
+
+                  -- lombok
+                  '-javaagent:' .. lombok_path,
 
                   '-configuration',
-                  config_path '-data',
+                  config_path,
+                  '-data',
                   vim.fn.stdpath 'cache' .. '/jdtls/' .. vim.fn.fnamemodify(vim.fn.getcwd(), ':t'),
                 },
                 -- This is the default if not provided, you can remove it. Or adjust as needed.
