@@ -223,6 +223,7 @@ vim.opt.rtp:prepend(lazypath)
 --  To update plugins you can run
 --    :Lazy update
 --
+--
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
@@ -236,6 +237,11 @@ require('lazy').setup({
   --
   --  This is equivalent to:
   --    require('Comment').setup({})
+  --
+  --
+  {
+    'mfussenegger/nvim-jdtls',
+  },
 
   -- "gc" to comment visual regions/lines
   { 'numToStr/Comment.nvim', opts = {} },
@@ -294,6 +300,7 @@ require('lazy').setup({
         ['<leader>h'] = { 'Git [H]unk' },
       }, { mode = 'v' })
     end,
+    opts = nil,
   },
 
   -- NOTE: Plugins can specify dependencies.
@@ -566,12 +573,12 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         clangd = {},
-        -- gopls = {},
         pyright = {},
         jdtls = {},
-        tsserver = {},
+        -- tsserver = {},
         html = {},
         zls = {},
+
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -605,7 +612,7 @@ require('lazy').setup({
       require('mason').setup()
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
-      local ensure_installed = vim.tbl_keys(servers or {})
+      local ensure_installed = vim.tbl_keys(servers or { 'jdtls', 'java-test', 'java-debug-adapter' })
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
       })
@@ -837,7 +844,7 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc', 'java' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -909,6 +916,13 @@ require('lazy').setup({
     },
   },
 })
+
+vim.cmd [[
+augroup jdtls_lsp
+    autocmd!
+    autocmd FileType java lua require'jdtls.jdtls_setup'.setup()
+augroup end
+]]
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
