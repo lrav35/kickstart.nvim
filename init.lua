@@ -417,6 +417,17 @@ require('lazy').setup({
 
   -- testing stuff :)
   {
+    'rcasia/neotest-java',
+    ft = 'java',
+    dependencies = {
+      'mfussenegger/nvim-jdtls',
+      'mfussenegger/nvim-dap', -- for the debugger
+      'rcarriga/nvim-dap-ui', -- recommended
+      'theHamsta/nvim-dap-virtual-text', -- recommended
+    },
+  },
+
+  {
     'nvim-neotest/neotest',
     event = 'VeryLazy',
     dependencies = {
@@ -466,17 +477,13 @@ require('lazy').setup({
       )
 
       -- setup java adapter
-      -- table.insert(
-      --   opts.adapters,
-      --   require 'neotest-jest' {
-      --     jestCommand = 'jest',
-      --     jestConfigFile = 'custom.jest.config.ts',
-      --     env = { CI = true },
-      --     cwd = function()
-      --       return vim.fn.getcwd()
-      --     end,
-      --   }
-      -- )
+      table.insert(
+        opts.adapters,
+        require 'neotest-java' {
+          junit_jar = nil, -- default: stdpath("data") .. /nvim/neotest-java/junit-platform-console-standalone-[version].jar
+          incremental_build = true,
+        }
+      )
 
       if opts.adapters then
         local adapters = {}
