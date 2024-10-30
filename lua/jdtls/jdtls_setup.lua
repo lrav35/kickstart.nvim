@@ -158,25 +158,9 @@ function M.setup()
       codeGeneration = {
         toString = {
           template = '${object.className}{${member.name()}=${member.value}, ${otherMembers}}',
-          -- flags = {
-          -- 	allow_incremental_sync = true,
-          -- },
         },
         useBlocks = true,
       },
-      -- configuration = {
-      --     runtimes = {
-      --         {
-      --             name = "java-17-openjdk",
-      --             path = "/usr/lib/jvm/default-runtime/bin/java"
-      --         }
-      --     }
-      -- }
-      -- project = {
-      -- 	referencedLibraries = {
-      -- 		"**/lib/*.jar",
-      -- 	},
-      -- },
     },
   }
 
