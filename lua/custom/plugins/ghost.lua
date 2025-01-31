@@ -1,20 +1,119 @@
+local function get_api_key(name)
+  if os.getenv(name) then
+    return os.getenv(name)
+  else
+    return 'not there, mate'
+  end
+end
+
+local anthropic_content_parser = function(stream)
+  local success, json = pcall(vim.json.decode, stream)
+  if success and json.delta and json.delta.text then
+    return json.delta.text
+  end
+  return nil
+end
+
+-- For providers using OpenAI/Hyperbolic style responses
+local openai_style_content_parser = function(stream)
+  local success, json = pcall(vim.json.decode, stream)
+  if success and json.choices and json.choices[1] and json.choices[1].delta and json.choices[1].delta.content then
+    return json.choices[1].delta.content
+  end
+  return nil
+end
+
+local function get_anthropic_specific_args(opts, prompt)
+  local url = opts.url
+  local api_key = opts.api_key_name and get_api_key(opts.api_key_name)
+
+  local data = {
+    system = opts.system_prompt,
+    max_tokens = opts.max_tokens,
+    messages = { { role = 'user', content = prompt } },
+    model = opts.model,
+    stream = true,
+  }
+
+  local json_data = vim.json.encode(data)
+
+  local args = {
+    '--no-buffer',
+    '-N',
+    url,
+    '-H',
+    'Content-Type: application/json',
+    '-H',
+    'anthropic-version: 2023-06-01',
+    '-H',
+    string.format('x-api-key: %s', api_key),
+    '-d',
+    json_data,
+  }
+  return args
+end
+
+local function get_hyperbolic_specific_args(opts, prompt)
+  local url = opts.url
+  local api_key = opts.api_key_name and get_api_key(opts.api_key_name)
+
+  local data = {
+    system = opts.system_prompt,
+    messages = { { role = 'user', content = prompt } },
+    model = opts.model,
+    max_tokens = opts.max_tokens,
+    temperature = 0.1,
+    top_p = 0.9,
+    stream = true,
+  }
+
+  local json_data = vim.json.encode(data)
+
+  local args = {
+    '-v',
+    '--no-buffer',
+    '-N',
+    url,
+    '-H',
+    'Content-Type: application/json',
+    '-H',
+    string.format('Authorization: Bearer %s', api_key),
+    '-d',
+    json_data,
+  }
+  return args
+end
+
 return {
   {
+    -- dir = os.getenv 'HOME' .. '/code/personal/ghost-writer.nvim',
     'lrav35/ghost-writer.nvim',
     dependencies = {
       'nvim-lua/plenary.nvim',
     },
     opts = {
-      debug = false,
+      debug = true,
       default = 'anthropic',
       system_prompt = 'you are a helpful assistant, what I am sending you may be notes, code or context provided by our previous conversation',
       providers = {
         anthropic = {
           url = 'https://api.anthropic.com/v1/messages',
           model = 'claude-3-5-sonnet-20241022',
+          event_based = true,
           target_state = 'content_block_delta',
           api_key_name = 'ANTHROPIC_API_KEY',
           max_tokens = 4096,
+          curl_args_fn = get_anthropic_specific_args,
+          parser = anthropic_content_parser,
+        },
+        hyperbolic = {
+          url = 'https://api.hyperbolic.xyz/v1/chat/completions',
+          model = 'Qwen/QwQ-32B-Preview',
+          event_based = false,
+          api_key_name = 'HYPERBOLIC_API_KEY',
+          max_tokens = 4096,
+          curl_args_fn = get_hyperbolic_specific_args,
+          parser = openai_style_content_parser,
         },
       },
       ui = {
