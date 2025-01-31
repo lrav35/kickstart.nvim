@@ -1,19 +1,20 @@
 return {
   {
-    dir = os.getenv 'HOME' .. '/code/personal/ghost-writer.nvim',
+    'lrav35/ghost-writer.nvim',
     dependencies = {
       'nvim-lua/plenary.nvim',
     },
     opts = {
       debug = false,
       default = 'anthropic',
+      system_prompt = 'you are a helpful assistant, what I am sending you may be notes, code or context provided by our previous conversation',
       providers = {
         anthropic = {
           url = 'https://api.anthropic.com/v1/messages',
           model = 'claude-3-5-sonnet-20241022',
           target_state = 'content_block_delta',
           api_key_name = 'ANTHROPIC_API_KEY',
-          system_prompt = 'you are a helpful assistant, what I am sending you may be notes, code or context provided by our previous conversation',
+          max_tokens = 4096,
         },
       },
       ui = {
