@@ -14,6 +14,16 @@ local anthropic_content_parser = function(stream)
   return nil
 end
 
+local get_shared_data = function(opts, prompt)
+  return {
+    system = opts.system_prompt,
+    max_tokens = opts.max_tokens,
+    messages = { { role = 'user', content = prompt } },
+    model = opts.model,
+    stream = opts.stream,
+  }
+end
+
 -- For providers using OpenAI/Hyperbolic style responses
 local openai_style_content_parser = function(stream)
   local success, json = pcall(vim.json.decode, stream)
@@ -27,14 +37,7 @@ local function get_anthropic_specific_args(opts, prompt)
   local url = opts.url
   local api_key = opts.api_key_name and get_api_key(opts.api_key_name)
 
-  local data = {
-    system = opts.system_prompt,
-    max_tokens = opts.max_tokens,
-    messages = { { role = 'user', content = prompt } },
-    model = opts.model,
-    stream = true,
-  }
-
+  local data = get_shared_data(opts, prompt)
   local json_data = vim.json.encode(data)
 
   local args = {
@@ -57,15 +60,35 @@ local function get_hyperbolic_specific_args(opts, prompt)
   local url = opts.url
   local api_key = opts.api_key_name and get_api_key(opts.api_key_name)
 
-  local data = {
-    system = opts.system_prompt,
-    messages = { { role = 'user', content = prompt } },
-    model = opts.model,
-    max_tokens = opts.max_tokens,
-    temperature = 0.1,
-    top_p = 0.9,
-    stream = true,
+  local data = get_shared_data(opts, prompt)
+  data['top_p'] = 0.1
+  data['temperature'] = 1
+
+  local json_data = vim.json.encode(data)
+
+  local args = {
+    '-v',
+    '--no-buffer',
+    '-N',
+    url,
+    '-H',
+    'Content-Type: application/json',
+    '-H',
+    string.format('Authorization: Bearer %s', api_key),
+    '-d',
+    json_data,
   }
+  return args
+end
+
+local function get_redacted_specific_args(opts, prompt)
+  local url = opts.url
+  local api_key = opts.api_key_name and get_api_key(opts.api_key_name)
+
+  local data = get_shared_data(opts, prompt)
+  data['use_case'] = 'local development'
+  data['top_p'] = 0.1
+  data['temperature'] = 1
 
   local json_data = vim.json.encode(data)
 
@@ -105,6 +128,7 @@ return {
           max_tokens = 4096,
           curl_args_fn = get_anthropic_specific_args,
           parser = anthropic_content_parser,
+          stream = true,
         },
         hyperbolic = {
           url = 'https://api.hyperbolic.xyz/v1/chat/completions',
@@ -114,6 +138,18 @@ return {
           max_tokens = 4096,
           curl_args_fn = get_hyperbolic_specific_args,
           parser = openai_style_content_parser,
+          stream = true,
+        },
+        redacted = {
+          url = 'REDACTED_API_URL',
+          model = 'TBD',
+          event_based = false,
+          target_state = 'content_block_delta',
+          api_key_name = 'REDACTED_API_KEY',
+          max_tokens = 4096,
+          curl_args_fn = get_redacted_specific_args,
+          parser = openai_style_content_parser,
+          stream = false,
         },
       },
       ui = {
