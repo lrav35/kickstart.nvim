@@ -1,4 +1,4 @@
-local function get_api_key(name)
+local function get_env_var(name)
   if os.getenv(name) then
     return os.getenv(name)
   else
@@ -19,8 +19,8 @@ local get_shared_data = function(opts, prompt)
     system = opts.system_prompt,
     max_tokens = opts.max_tokens,
     messages = { { role = 'user', content = prompt } },
-    model = opts.model,
     stream = opts.stream,
+    model = opts.model,
   }
 end
 
@@ -35,7 +35,7 @@ end
 
 local function get_anthropic_specific_args(opts, prompt)
   local url = opts.url
-  local api_key = opts.api_key_name and get_api_key(opts.api_key_name)
+  local api_key = opts.api_key_name and get_env_var(opts.api_key_name)
 
   local data = get_shared_data(opts, prompt)
   local json_data = vim.json.encode(data)
@@ -58,7 +58,7 @@ end
 
 local function get_hyperbolic_specific_args(opts, prompt)
   local url = opts.url
-  local api_key = opts.api_key_name and get_api_key(opts.api_key_name)
+  local api_key = opts.api_key_name and get_env_var(opts.api_key_name)
 
   local data = get_shared_data(opts, prompt)
   data['top_p'] = 0.1
@@ -83,10 +83,9 @@ end
 
 local function get_redacted_specific_args(opts, prompt)
   local url = opts.url
-  local api_key = opts.api_key_name and get_api_key(opts.api_key_name)
+  local api_key = opts.api_key_name and get_env_var(opts.api_key_name)
 
   local data = get_shared_data(opts, prompt)
-  data['use_case'] = 'local development'
   data['top_p'] = 0.1
   data['temperature'] = 1
 
@@ -101,6 +100,8 @@ local function get_redacted_specific_args(opts, prompt)
     'Content-Type: application/json',
     '-H',
     string.format('Authorization: Bearer %s', api_key),
+    '-H',
+    'use-case: local development assistance',
     '-d',
     json_data,
   }
@@ -142,9 +143,7 @@ return {
         },
         redacted = {
           url = 'REDACTED_API_URL',
-          model = 'TBD',
           event_based = false,
-          target_state = 'content_block_delta',
           api_key_name = 'REDACTED_API_KEY',
           max_tokens = 4096,
           curl_args_fn = get_redacted_specific_args,
